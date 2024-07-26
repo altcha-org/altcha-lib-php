@@ -1,0 +1,15 @@
+/.settings
+/.project
+/.buildpath
+/composer.phar
+/vendor
+/nbproject
+/tests/composer-test.phar
+.phpunit.result.cache
+phpunit.xml
+.vagrant
+Vagrantfile
+.idea
+.vscode
+.php-cs-fixer.cache
+.DS_Store

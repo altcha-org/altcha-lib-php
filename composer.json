@@ -1,0 +1,22 @@
+{
+    "name": "altcha-org/altcha",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "AltchaOrg\\Altcha\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Daniel Regeci",
+            "email": "536331+ovx@users.noreply.github.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.4"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.2"
+    }
+}
