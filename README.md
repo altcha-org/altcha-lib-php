@@ -14,7 +14,7 @@ This library is compatible with:
 To install the ALTCHA PHP Library, use the following command:
 
 ```sh
-composer require altchaorg/altcha
+composer require altcha-org/altcha
 ```
 
 ## Usage
