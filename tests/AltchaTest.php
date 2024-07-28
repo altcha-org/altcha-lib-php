@@ -21,7 +21,7 @@ class AltchaTest extends TestCase
         $this->assertInstanceOf(Challenge::class, $challenge);
         $this->assertEquals(Algorithm::SHA256, $challenge->algorithm);
         $this->assertNotEmpty($challenge->challenge);
-        $this->assertEquals(1e6, $challenge->maxNumber);
+        $this->assertEquals(1e6, $challenge->maxnumber);
         $this->assertNotEmpty($challenge->salt);
         $this->assertNotEmpty($challenge->signature);
     }
@@ -73,7 +73,7 @@ class AltchaTest extends TestCase
 
         $challenge = Altcha::createChallenge($options);
 
-        $solution = Altcha::solveChallenge($challenge->challenge, $challenge->salt, $challenge->algorithm, $challenge->maxNumber);
+        $solution = Altcha::solveChallenge($challenge->challenge, $challenge->salt, $challenge->algorithm, $challenge->maxnumber);
 
         $this->assertInstanceOf(Solution::class, $solution);
         $this->assertEquals($solution->number, $solution->number);

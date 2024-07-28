@@ -9,6 +9,10 @@ This library is compatible with:
 - PHP 7.4+
 - All major platforms (Linux, Windows, macOS)
 
+## Example
+
+- [Demo server](https://github.com/altcha-org/altcha-starter-php)
+
 ## Installation
 
 To install the ALTCHA PHP Library, use the following command:

@@ -6,7 +6,7 @@ class Challenge
 {
     public $algorithm;
     public $challenge;
-    public $maxNumber;
+    public $maxnumber;
     public $salt;
     public $signature;
 
@@ -14,7 +14,7 @@ class Challenge
     {
         $this->algorithm = $algorithm;
         $this->challenge = $challenge;
-        $this->maxNumber = $maxNumber;
+        $this->maxnumber = $maxNumber;
         $this->salt = $salt;
         $this->signature = $signature;
     }
