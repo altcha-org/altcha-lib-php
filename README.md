@@ -46,11 +46,11 @@ echo "Challenge created: " . json_encode($challenge) . "\n";
 
 // Example payload to verify
 $payload = [
-    'algorithm' => $challenge['algorithm'],
-    'challenge' => $challenge['challenge'],
+    'algorithm' => $challenge->algorithm,
+    'challenge' => $challenge->challenge,
     'number'    => 12345, // Example number
-    'salt'      => $challenge['salt'],
-    'signature' => $challenge['signature'],
+    'salt'      => $challenge->salt,
+    'signature' => $challenge->signature,
 ];
 
 // Verify the solution
