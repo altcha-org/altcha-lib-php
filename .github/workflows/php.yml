@@ -26,5 +26,11 @@ jobs:
       - name: Composer install
         run: composer install --no-progress
 
+      - name: Run PHP-CS-Fixer
+        run: vendor/bin/php-cs-fixer fix -v --dry-run --stop-on-violation --using-cache=no
+
+      - name: Run PHPStan
+        run: vendor/bin/phpstan analyse --no-progress --error-format=github
+
       - name: Run PHPUnit
         run: vendor/bin/phpunit
