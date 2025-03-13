@@ -23,6 +23,7 @@ class BaseChallengeOptions
 
     /**
      * Options for creation of a new challenge.
+     *
      * @see ChallengeOptions for options with sane defaults.
      *
      * @param ChallengeParams $params
@@ -34,7 +35,7 @@ class BaseChallengeOptions
         ?\DateTimeInterface $expires,
         string $salt,
         int $number,
-        array $params
+        array $params,
     ) {
         $this->algorithm = $algorithm;
         $this->hmacKey = $hmacKey;

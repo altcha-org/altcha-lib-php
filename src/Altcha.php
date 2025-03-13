@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace AltchaOrg\Altcha;
 
-use InvalidArgumentException;
-
 class Altcha
 {
     private static function hash(string $algorithm, string $data): string
@@ -18,7 +16,7 @@ class Altcha
             case Algorithm::SHA512:
                 return hash('sha512', $data, true);
             default:
-                throw new InvalidArgumentException("Unsupported algorithm: $algorithm");
+                throw new \InvalidArgumentException("Unsupported algorithm: $algorithm");
         }
     }
 
@@ -37,7 +35,7 @@ class Altcha
             case Algorithm::SHA512:
                 return hash_hmac('sha512', $data, $key, true);
             default:
-                throw new InvalidArgumentException("Unsupported algorithm: $algorithm");
+                throw new \InvalidArgumentException("Unsupported algorithm: $algorithm");
         }
     }
 
@@ -47,8 +45,6 @@ class Altcha
     }
 
     /**
-     * @param string $payload
-     *
      * @return null|array<array-key, mixed>
      */
     private static function decodePayload(string $payload): ?array
@@ -60,12 +56,12 @@ class Altcha
         }
 
         try {
-            $data = json_decode($decoded, true, 2, JSON_THROW_ON_ERROR);
+            $data = json_decode($decoded, true, 2, \JSON_THROW_ON_ERROR);
         } catch (\JsonException|\ValueError $e) {
             return null;
         }
 
-        if (!is_array($data) || empty($data)) {
+        if (!\is_array($data) || empty($data)) {
             return null;
         }
 
@@ -73,21 +69,21 @@ class Altcha
     }
 
     /**
-     * @param string|array<array-key, mixed> $data
+     * @param array<array-key, mixed>|string $data
      */
     private static function verifyAndBuildSolutionPayload($data): ?Payload
     {
-        if (is_string($data)) {
+        if (\is_string($data)) {
             $data = self::decodePayload($data);
         }
 
-        if ($data === null
+        if (null === $data
             || !isset($data['algorithm'], $data['challenge'], $data['number'], $data['salt'], $data['signature'])
-            || !is_string($data['algorithm'])
-            || !is_string($data['challenge'])
-            || !is_int($data['number'])
-            || !is_string($data['salt'])
-            || !is_string($data['signature'])
+            || !\is_string($data['algorithm'])
+            || !\is_string($data['challenge'])
+            || !\is_int($data['number'])
+            || !\is_string($data['salt'])
+            || !\is_string($data['signature'])
         ) {
             return null;
         }
@@ -96,20 +92,20 @@ class Altcha
     }
 
     /**
-     * @param string|array<array-key, mixed> $data
+     * @param array<array-key, mixed>|string $data
      */
     private static function verifyAndBuildServerSignaturePayload($data): ?ServerSignaturePayload
     {
-        if (is_string($data)) {
+        if (\is_string($data)) {
             $data = self::decodePayload($data);
         }
 
-        if ($data === null
+        if (null === $data
             || !isset($data['algorithm'], $data['verificationData'], $data['signature'], $data['verified'])
-            || !is_string($data['algorithm'])
-            || !is_string($data['verificationData'])
-            || !is_string($data['signature'])
-            || !is_bool($data['verified'])
+            || !\is_string($data['algorithm'])
+            || !\is_string($data['verificationData'])
+            || !\is_string($data['signature'])
+            || !\is_bool($data['verified'])
         ) {
             return null;
         }
@@ -119,8 +115,6 @@ class Altcha
 
     /**
      * Creates a new challenge for ALTCHA.
-     *
-     * @param BaseChallengeOptions $options
      *
      * @return Challenge The challenge data to be passed to ALTCHA.
      */
@@ -135,7 +129,7 @@ class Altcha
     /**
      * Verifies an ALTCHA solution.
      *
-     * @param string|array<array-key, mixed> $data         The solution payload to verify.
+     * @param array<array-key, mixed>|string $data         The solution payload to verify.
      * @param string                         $hmacKey      The HMAC key used for verification.
      * @param bool                           $checkExpires Whether to check if the challenge has expired.
      *
@@ -151,7 +145,7 @@ class Altcha
 
         $params = self::extractParams($payload);
         if ($checkExpires && isset($params['expires']) && is_numeric($params['expires'])) {
-            $expireTime = (int)$params['expires'];
+            $expireTime = (int) $params['expires'];
             if (time() > $expireTime) {
                 return false;
             }
@@ -166,8 +160,8 @@ class Altcha
 
         $expectedChallenge = self::createChallenge($challengeOptions);
 
-        return $expectedChallenge->challenge === $payload->challenge &&
-            $expectedChallenge->signature === $payload->signature;
+        return $expectedChallenge->challenge === $payload->challenge
+            && $expectedChallenge->signature === $payload->signature;
     }
 
     /**
@@ -176,10 +170,12 @@ class Altcha
     private static function extractParams(Payload $payload): array
     {
         $saltParts = explode('?', $payload->salt);
-        if (count($saltParts) > 1) {
+        if (\count($saltParts) > 1) {
             parse_str($saltParts[1], $params);
+
             return $params;
         }
+
         return [];
     }
 
@@ -199,14 +195,14 @@ class Altcha
         }
         $joinedData = implode("\n", $lines);
         $computedHash = self::hashHex($algorithm, $joinedData);
+
         return $computedHash === $fieldsHash;
     }
-
 
     /**
      * Verifies the server signature.
      *
-     * @param string|array<array-key, mixed> $data    The payload to verify (string or `ServerSignaturePayload` array).
+     * @param array<array-key, mixed>|string $data    The payload to verify (string or `ServerSignaturePayload` array).
      * @param string                         $hmacKey The HMAC key used for verification.
      */
     public static function verifyServerSignature($data, string $hmacKey): ServerSignatureVerification
@@ -222,14 +218,14 @@ class Altcha
 
         parse_str($payload->verificationData, $params);
 
-        $classification = isset($params['classification']) && is_string($params['classification']) ? $params['classification'] : '';
-        $country = isset($params['country']) && is_string($params['country']) ? $params['country'] : '';
-        $detectedLanguage = isset($params['detectedLanguage']) && is_string($params['detectedLanguage']) ? $params['detectedLanguage'] : '';
-        $email = isset($params['email']) && is_string($params['email']) ? $params['email'] : '';
+        $classification = isset($params['classification']) && \is_string($params['classification']) ? $params['classification'] : '';
+        $country = isset($params['country']) && \is_string($params['country']) ? $params['country'] : '';
+        $detectedLanguage = isset($params['detectedLanguage']) && \is_string($params['detectedLanguage']) ? $params['detectedLanguage'] : '';
+        $email = isset($params['email']) && \is_string($params['email']) ? $params['email'] : '';
         $expire = isset($params['expire']) && is_numeric($params['expire']) ? (int) $params['expire'] : 0;
-        $fields = isset($params['fields']) && is_array($params['fields']) ? $params['fields'] : [];
-        $fieldsHash = isset($params['fieldsHash']) && is_string($params['fieldsHash']) ? $params['fieldsHash'] : '';
-        $reasons = isset($params['reasons']) && is_array($params['reasons']) ? $params['reasons'] : [];
+        $fields = isset($params['fields']) && \is_array($params['fields']) ? $params['fields'] : [];
+        $fieldsHash = isset($params['fieldsHash']) && \is_string($params['fieldsHash']) ? $params['fieldsHash'] : '';
+        $reasons = isset($params['reasons']) && \is_array($params['reasons']) ? $params['reasons'] : [];
         $score = isset($params['score']) && is_numeric($params['score']) ? (float) $params['score'] : 0.0;
         $time = isset($params['time']) && is_numeric($params['time']) ? (int) $params['time'] : 0;
         $verified = isset($params['verified']) && $params['verified'];
@@ -249,9 +245,9 @@ class Altcha
         );
 
         $now = time();
-        $isVerified = $payload->verified && $verificationData->verified &&
-            $verificationData->expire > $now &&
-            $payload->signature === $expectedSignature;
+        $isVerified = $payload->verified && $verificationData->verified
+            && $verificationData->expire > $now
+            && $payload->signature === $expectedSignature;
 
         return new ServerSignatureVerification($isVerified, $verificationData);
     }
@@ -273,6 +269,7 @@ class Altcha
             $hash = self::hashHex($algorithm, $salt . $n);
             if ($hash === $challenge) {
                 $took = microtime(true) - $startTime;
+
                 return new Solution($n, $took);
             }
         }

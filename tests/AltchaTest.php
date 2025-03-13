@@ -32,7 +32,7 @@ class AltchaTest extends TestCase
     {
         $formData = [
             'field1' => 'value1',
-            'field2' => 'value2'
+            'field2' => 'value2',
         ];
 
         $fields = ['field1', 'field2'];

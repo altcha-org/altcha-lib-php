@@ -35,7 +35,7 @@ class ServerSignatureVerificationData
         array $reasons,
         float $score,
         int $time,
-        bool $verified
+        bool $verified,
     ) {
         $this->classification = $classification;
         $this->country = $country;

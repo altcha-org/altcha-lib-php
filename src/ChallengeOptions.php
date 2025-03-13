@@ -20,7 +20,7 @@ class ChallengeOptions extends BaseChallengeOptions
      * @param int                     $maxNumber  Maximum number for the random number generator (default: 1,000,000)
      * @param string                  $algorithm  Hashing algorithm to use (`SHA-1`, `SHA-256`, `SHA-512`, default:
      *                                            `SHA-256`).
-     * @param \DateTimeInterface|null $expires    Optional expiration time for the challenge.
+     * @param null|\DateTimeInterface $expires    Optional expiration time for the challenge.
      * @param ChallengeParams         $params     Optional URL-encoded query parameters.
      * @param int<1, max>             $saltLength Length of the random salt (default: 12 bytes).
      */
@@ -30,7 +30,7 @@ class ChallengeOptions extends BaseChallengeOptions
         int $maxNumber = self::DEFAULT_MAX_NUMBER,
         ?\DateTimeInterface $expires = null,
         array $params = [],
-        int $saltLength = self::DEFAULT_SALT_LENGTH
+        int $saltLength = self::DEFAULT_SALT_LENGTH,
     ) {
         parent::__construct(
             $algorithm,
