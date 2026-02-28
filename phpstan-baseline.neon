@@ -5,3 +5,15 @@ parameters:
 			identifier: catch.neverThrown
 			count: 1
 			path: src/Altcha.php
+
+		-
+			message: '#^Possibly invalid array key type mixed\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 1
+			path: src/Altcha.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between false and int will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: src/Obfuscator.php
