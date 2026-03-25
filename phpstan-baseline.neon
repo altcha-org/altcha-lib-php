@@ -1,0 +1,25 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Dead catch \- ValueError is never thrown in the try block\.$#'
+			identifier: catch.neverThrown
+			count: 1
+			path: src/V1/Altcha.php
+
+		-
+			message: '#^Possibly invalid array key type mixed\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 1
+			path: src/V1/Altcha.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between false and int will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: src/V1/Obfuscator.php
+
+		-
+			message: '#^Dead catch \- ValueError is never thrown in the try block\.$#'
+			identifier: catch.neverThrown
+			count: 1
+			path: src/ServerSignature.php

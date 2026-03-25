@@ -1,0 +1,37 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+
+jobs:
+
+  tests:
+    runs-on:         ubuntu-latest
+    timeout-minutes: 3
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: xdebug
+
+      - name: Validate composer.json and composer.lock
+        run: composer validate --no-check-publish
+
+      - name: Composer install
+        run: composer install --no-progress
+
+      - name: Run PHP-CS-Fixer
+        run: vendor/bin/php-cs-fixer fix -v --dry-run --stop-on-violation --using-cache=no
+
+      - name: Run PHPStan
+        run: vendor/bin/phpstan analyse --no-progress --error-format=github
+
+      - name: Run PHPUnit
+        run: vendor/bin/phpunit tests
