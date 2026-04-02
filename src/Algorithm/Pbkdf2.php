@@ -11,7 +11,8 @@ class Pbkdf2 implements DeriveKeyInterface
 {
     public function __construct(
         private readonly HmacAlgorithm $hmacAlgorithm = HmacAlgorithm::SHA256,
-    ) {}
+    ) {
+    }
 
     public function getAlgorithmName(): string
     {

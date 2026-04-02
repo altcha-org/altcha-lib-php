@@ -14,7 +14,8 @@ class Altcha
         #[\SensitiveParameter]
         private readonly ?string $hmacKeySignatureSecret = null,
         private readonly HmacAlgorithm $hmacAlgorithm = HmacAlgorithm::SHA256,
-    ) {}
+    ) {
+    }
 
     public function createChallenge(CreateChallengeOptions $options): Challenge
     {
@@ -95,7 +96,7 @@ class Altcha
                 return new Solution($counter, bin2hex($derivedKey), $time);
             }
 
-            ++$i;
+            $i++;
         }
 
         return null;

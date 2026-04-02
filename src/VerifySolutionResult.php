@@ -12,5 +12,6 @@ class VerifySolutionResult
         public readonly ?bool $invalidSignature = null,
         public readonly ?bool $invalidSolution = null,
         public readonly float $time = 0.0,
-    ) {}
+    ) {
+    }
 }

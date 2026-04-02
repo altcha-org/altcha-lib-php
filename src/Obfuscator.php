@@ -20,7 +20,8 @@ class Obfuscator
     public function __construct(
         private readonly Altcha $altcha,
         private readonly DeriveKeyInterface $algorithm = new Pbkdf2(),
-    ) {}
+    ) {
+    }
 
     public function obfuscate(
         string $data,
@@ -86,7 +87,7 @@ class Obfuscator
             throw new \InvalidArgumentException('Unable to parse obfuscated data.');
         }
 
-        /** @var array{parameters: array<string, mixed>, parameters: array<string, mixed>|null, cipher: array{iv: string, data: string}|null}|null $parsed */
+        /** @var null|array{parameters: array<string, mixed>, parameters: null|array<string, mixed>, cipher: null|array{iv: string, data: string}} $parsed */
         $parsed = json_decode($json, true);
         if (!\is_array($parsed) || !isset($parsed['parameters'], $parsed['cipher'])) {
             throw new \InvalidArgumentException('Invalid obfuscated data format.');

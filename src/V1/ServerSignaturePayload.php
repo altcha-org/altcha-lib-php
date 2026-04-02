@@ -13,5 +13,6 @@ class ServerSignaturePayload
         public readonly string $verificationData,
         public readonly string $signature,
         public readonly bool $verified,
-    ) {}
+    ) {
+    }
 }

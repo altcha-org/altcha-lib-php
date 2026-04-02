@@ -17,7 +17,8 @@ class Altcha
         #[\SensitiveParameter]
         private readonly string $hmacKey,
         private readonly HasherInterface $hasher = new Hasher(),
-    ) {}
+    ) {
+    }
 
     /**
      * @return null|array<array-key, mixed>
@@ -167,16 +168,17 @@ class Altcha
     /**
      * Verifies the hash of form fields.
      *
-     * @param array<array-key, mixed> $formData   The form data to hash.
-     * @param array<array-key, mixed> $fields     The fields to include in the hash.
-     * @param string                  $fieldsHash The expected hash value.
-     * @param Algorithm               $algorithm  Hashing algorithm (`SHA-1`, `SHA-256`, `SHA-512`).
+     * @param array<string, mixed> $formData   The form data to hash.
+     * @param list<string>         $fields     The fields to include in the hash.
+     * @param string               $fieldsHash The expected hash value.
+     * @param Algorithm            $algorithm  Hashing algorithm (`SHA-1`, `SHA-256`, `SHA-512`).
      */
     public function verifyFieldsHash(array $formData, array $fields, string $fieldsHash, Algorithm $algorithm): bool
     {
         $lines = [];
         foreach ($fields as $field) {
-            $lines[] = $formData[$field] ?? '';
+            $value = $formData[$field] ?? null;
+            $lines[] = \is_scalar($value) ? (string) $value : '';
         }
         $joinedData = implode("\n", $lines);
         $computedHash = $this->hasher->hashHex($algorithm, $joinedData);

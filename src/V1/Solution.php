@@ -9,5 +9,6 @@ class Solution
     public function __construct(
         public readonly int $number,
         public readonly float $took,
-    ) {}
+    ) {
+    }
 }

@@ -4,25 +4,32 @@ declare(strict_types=1);
 
 use PhpCsFixer\Config;
 use PhpCsFixer\Finder;
+use PhpCsFixer\Runner\Parallel\ParallelConfigFactory;
 
 return (new Config())
-    ->setRiskyAllowed(false)
+    ->setParallelConfig(ParallelConfigFactory::detect())
+    ->setRiskyAllowed(true)
     ->setRules([
-        '@auto' => true
+        '@PHP8x2Migration' => true,
+        '@PHPUnit10x0Migration:risky' => true,
+        '@Symfony' => true,
+        '@Symfony:risky' => true,
+        'protected_to_private' => false,
+        'phpdoc_annotation_without_dot' => false,
+        'increment_style' => [
+            'style' => 'post',
+        ],
+        'phpdoc_types_order' => [
+            'null_adjustment' => 'always_first',
+        ],
+        'concat_space' => [
+            'spacing' => 'one',
+        ],
     ])
-    // 💡 by default, Fixer looks for `*.php` files excluding `./vendor/` - here, you can groom this config
     ->setFinder(
         (new Finder())
-            // 💡 root folder to check
-            ->in(__DIR__)
-            // 💡 additional files, eg bin entry file
-            // ->append([__DIR__.'/bin-entry-file'])
-            // 💡 folders to exclude, if any
-            // ->exclude([/* ... */])
-            // 💡 path patterns to exclude, if any
-            // ->notPath([/* ... */])
-            // 💡 extra configs
-            // ->ignoreDotFiles(false) // true by default in v3, false in v4 or future mode
-            // ->ignoreVCS(true) // true by default
+            ->in(__DIR__ . '/src')
+            ->in(__DIR__ . '/tests')
+            ->append([__FILE__])
     )
-;
+    ->setCacheFile('.php-cs-fixer.cache');

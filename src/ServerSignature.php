@@ -72,16 +72,16 @@ class ServerSignature
             }
 
             if (\in_array($key, self::ARRAY_KEYS, true)) {
-                $result[$key] = $value !== '' ? explode(',', $value) : [];
+                $result[$key] = '' !== $value ? explode(',', $value) : [];
                 continue;
             }
 
-            if ($value === 'true') {
+            if ('true' === $value) {
                 $result[$key] = true;
                 continue;
             }
 
-            if ($value === 'false') {
+            if ('false' === $value) {
                 $result[$key] = false;
                 continue;
             }
@@ -114,7 +114,8 @@ class ServerSignature
     ): bool {
         $lines = [];
         foreach ($fields as $field) {
-            $lines[] = $formData[$field] ?? '';
+            $value = $formData[$field] ?? null;
+            $lines[] = \is_scalar($value) ? (string) $value : '';
         }
         $joinedData = implode("\n", $lines);
         $computedHash = hash($hmacAlgorithm->hashAlgo(), $joinedData);

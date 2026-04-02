@@ -22,5 +22,6 @@ class ServerSignatureVerificationData
         public readonly float $score,
         public readonly int $time,
         public readonly bool $verified,
-    ) {}
+    ) {
+    }
 }

@@ -18,7 +18,8 @@ class Obfuscator
     public function __construct(
         private readonly int $maxNumber = self::DEFAULT_MAX_NUMBER,
         private readonly HasherInterface $hasher = new Hasher(),
-    ) {}
+    ) {
+    }
 
     /**
      * Encrypts a payload for PoW-based reveal using AES-GCM.
@@ -45,7 +46,7 @@ class Obfuscator
 
         // Fill IV from the counter, one byte at a time (little‑endian)
         for ($i = 0; $i < $ivLength; $i++) {
-            $iv .= \chr($num % 256);
+            $iv .= \chr(abs($num % 256));
             $num = intdiv($num, 256);
         }
 

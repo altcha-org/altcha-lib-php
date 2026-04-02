@@ -9,5 +9,6 @@ class ServerSignatureVerification
     public function __construct(
         public readonly bool $verified,
         public readonly ?ServerSignatureVerificationData $data,
-    ) {}
+    ) {
+    }
 }

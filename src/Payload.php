@@ -9,7 +9,8 @@ class Payload
     public function __construct(
         public readonly Challenge $challenge,
         public readonly Solution $solution,
-    ) {}
+    ) {
+    }
 
     /**
      * @return array<string, mixed>

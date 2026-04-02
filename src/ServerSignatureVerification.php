@@ -13,5 +13,6 @@ class ServerSignatureVerification
         public readonly bool $invalidSignature = false,
         public readonly bool $invalidSolution = false,
         public readonly float $time = 0.0,
-    ) {}
+    ) {
+    }
 }

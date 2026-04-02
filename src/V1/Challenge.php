@@ -12,5 +12,6 @@ class Challenge
         public readonly int $maxNumber,
         public readonly string $salt,
         public readonly string $signature,
-    ) {}
+    ) {
+    }
 }

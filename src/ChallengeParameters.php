@@ -21,7 +21,8 @@ class ChallengeParameters
         public readonly ?int $parallelism = null,
         public readonly ?int $expiresAt = null,
         public readonly ?array $data = null,
-    ) {}
+    ) {
+    }
 
     /**
      * @return array<string, mixed>

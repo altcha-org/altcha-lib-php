@@ -10,7 +10,8 @@ class Sha implements DeriveKeyInterface
 {
     public function __construct(
         private readonly ShaAlgorithm $algorithm = ShaAlgorithm::SHA256,
-    ) {}
+    ) {
+    }
 
     public function getAlgorithmName(): string
     {

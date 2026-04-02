@@ -30,7 +30,8 @@ class ServerSignatureVerificationData implements \ArrayAccess, \JsonSerializable
      */
     public function __construct(
         private readonly array $data = [],
-    ) {}
+    ) {
+    }
 
     public function __get(string $name): mixed
     {

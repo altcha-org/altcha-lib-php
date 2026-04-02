@@ -14,5 +14,6 @@ class SolveChallengeOptions
         public readonly int $start = 0,
         public readonly int $step = 1,
         public readonly float $timeout = 30.0,
-    ) {}
+    ) {
+    }
 }

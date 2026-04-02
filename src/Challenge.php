@@ -9,7 +9,8 @@ class Challenge
     public function __construct(
         public readonly ChallengeParameters $parameters,
         public readonly ?string $signature = null,
-    ) {}
+    ) {
+    }
 
     /**
      * @return array<string, mixed>

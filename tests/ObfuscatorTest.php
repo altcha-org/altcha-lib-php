@@ -94,7 +94,7 @@ class ObfuscatorTest extends TestCase
 
     public function testObfuscateUnicodeString(): void
     {
-        $plaintext = "Hello 世界! 🌍 Ñoño";
+        $plaintext = 'Hello 世界! 🌍 Ñoño';
 
         $obfuscated = $this->obfuscator->obfuscate($plaintext, cost: 100, counterMin: 1, counterMax: 3);
         $decrypted = $this->obfuscator->deobfuscate($obfuscated);

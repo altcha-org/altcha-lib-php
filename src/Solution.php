@@ -10,7 +10,8 @@ class Solution
         public readonly int $counter,
         public readonly string $derivedKey,
         public readonly ?float $time = null,
-    ) {}
+    ) {
+    }
 
     /**
      * @return array<string, mixed>

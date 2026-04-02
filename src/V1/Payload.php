@@ -14,5 +14,6 @@ class Payload
         public readonly int $number,
         public readonly string $salt,
         public readonly string $signature,
-    ) {}
+    ) {
+    }
 }
