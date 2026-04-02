@@ -174,9 +174,11 @@ class Altcha
      */
     public function verifyFieldsHash(array $formData, array $fields, string $fieldsHash, Algorithm $algorithm): bool
     {
+        /** @var array<string> $lines */
         $lines = [];
         foreach ($fields as $field) {
-            $lines[] = $formData[$field] ?? '';
+            $value = $formData[$field] ?? '';
+            $lines[] = is_scalar($value) ? (string) $value : '';
         }
         $joinedData = implode("\n", $lines);
         $computedHash = $this->hasher->hashHex($algorithm, $joinedData);
