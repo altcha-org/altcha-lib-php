@@ -178,7 +178,7 @@ class Altcha
         $lines = [];
         foreach ($fields as $field) {
             $value = $formData[$field] ?? '';
-            $lines[] = is_scalar($value) ? (string) $value : '';
+            $lines[] = \is_scalar($value) ? (string) $value : '';
         }
         $joinedData = implode("\n", $lines);
         $computedHash = $this->hasher->hashHex($algorithm, $joinedData);

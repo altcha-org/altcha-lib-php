@@ -12,8 +12,8 @@ return (new Config())
     // @see https://github.com/PHP-CS-Fixer/PHP-CS-Fixer/pull/7777
     ->setParallelConfig(ParallelConfigFactory::detect())
     ->setRules([
-        '@PHP71Migration' => true,
-        '@PHPUnit75Migration:risky' => true,
+        '@PHP7x1Migration' => true,
+        '@PHPUnit7x5Migration:risky' => true,
         '@Symfony' => true,
         '@Symfony:risky' => true,
         'protected_to_private' => false,
