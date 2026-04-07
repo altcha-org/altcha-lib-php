@@ -27,9 +27,6 @@
     "config": {
         "allow-plugins": {
             "phpstan/extension-installer": true
-        },
-        "platform": {
-            "php": "8.2"
         }
     }
 }

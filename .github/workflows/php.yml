@@ -21,11 +21,13 @@ jobs:
           php-version: '8.2'
           coverage: xdebug
 
-      - name: Validate composer.json and composer.lock
+      - name: Validate composer.json
         run: composer validate --no-check-publish
 
       - name: Composer install
-        run: composer install --no-progress
+        run: |
+          composer config platform.php 8.2
+          composer install --no-progress
 
       - name: Run PHP-CS-Fixer
         run: vendor/bin/php-cs-fixer fix -v --dry-run --stop-on-violation --using-cache=no
