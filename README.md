@@ -4,7 +4,7 @@ A lightweight PHP library for creating and verifying [ALTCHA](https://altcha.org
 
 ## Compatibility
 
-- PHP 8.2+
+- PHP 8.1+
 
 ## Migrating from V1 to V2
 

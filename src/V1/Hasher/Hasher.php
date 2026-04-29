@@ -20,7 +20,7 @@ class Hasher implements HasherInterface
         return bin2hex($this->hash($algorithm, $data));
     }
 
-    public function hashHmac(Algorithm $algorithm, string $data, #[\SensitiveParameter] string $hmacKey): string
+    public function hashHmac(Algorithm $algorithm, string $data, string $hmacKey): string
     {
         return match ($algorithm) {
             Algorithm::SHA1 => hash_hmac('sha1', $data, $hmacKey, true),
@@ -29,7 +29,7 @@ class Hasher implements HasherInterface
         };
     }
 
-    public function hashHmacHex(Algorithm $algorithm, string $data, #[\SensitiveParameter] string $hmacKey): string
+    public function hashHmacHex(Algorithm $algorithm, string $data, string $hmacKey): string
     {
         return bin2hex($this->hashHmac($algorithm, $data, $hmacKey));
     }

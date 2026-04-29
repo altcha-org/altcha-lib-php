@@ -14,7 +14,6 @@ class ServerSignature
      */
     public static function verifyServerSignature(
         string|array $data,
-        #[\SensitiveParameter]
         string $hmacKey,
     ): ServerSignatureVerification {
         $startTime = hrtime(true);

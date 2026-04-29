@@ -9,9 +9,7 @@ use AltchaOrg\Altcha\Algorithm\DeriveKeyInterface;
 class Altcha
 {
     public function __construct(
-        #[\SensitiveParameter]
         private readonly ?string $hmacSignatureSecret = null,
-        #[\SensitiveParameter]
         private readonly ?string $hmacKeySignatureSecret = null,
         private readonly HmacAlgorithm $hmacAlgorithm = HmacAlgorithm::SHA256,
     ) {

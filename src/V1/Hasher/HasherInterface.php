@@ -10,7 +10,7 @@ interface HasherInterface
 
     public function hashHex(Algorithm $algorithm, string $data): string;
 
-    public function hashHmac(Algorithm $algorithm, string $data, #[\SensitiveParameter] string $hmacKey): string;
+    public function hashHmac(Algorithm $algorithm, string $data, string $hmacKey): string;
 
-    public function hashHmacHex(Algorithm $algorithm, string $data, #[\SensitiveParameter] string $hmacKey): string;
+    public function hashHmacHex(Algorithm $algorithm, string $data, string $hmacKey): string;
 }
