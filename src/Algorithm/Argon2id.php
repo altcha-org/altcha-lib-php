@@ -20,9 +20,9 @@ class Argon2id implements DeriveKeyInterface
             throw new \RuntimeException('ext-sodium is required for Argon2id.');
         }
 
-        $cost = max(1, $parameters->cost ?? 2);
+        $cost = max(1, $parameters->cost);
         $memoryCost = max(1, $parameters->memoryCost ?? 32768) * 1024;
-        $keyLength = max(0, $parameters->keyLength ?? 32);
+        $keyLength = max(0, $parameters->keyLength);
 
         $derivedKey = sodium_crypto_pwhash(
             $keyLength,

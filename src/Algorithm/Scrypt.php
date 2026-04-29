@@ -20,10 +20,10 @@ class Scrypt implements DeriveKeyInterface
             throw new \RuntimeException('ext-scrypt is required for Scrypt (https://github.com/DomBlack/php-scrypt).');
         }
 
-        $cost = max(1, $parameters->cost ?? 32768);
+        $cost = max(1, $parameters->cost);
         $memoryCost = max(1, $parameters->memoryCost ?? 8);
         $parallelism = max(1, $parameters->parallelism ?? 1);
-        $keyLength = max(0, $parameters->keyLength ?? 32);
+        $keyLength = max(0, $parameters->keyLength);
 
         /** @var string $derivedKey */
         $derivedKey = scrypt(

@@ -22,8 +22,8 @@ class Pbkdf2 implements DeriveKeyInterface
         string $salt,
         string $password,
     ): DeriveKeyResult {
-        $cost = max(1, $parameters->cost ?? 5000);
-        $keyLength = max(0, $parameters->keyLength ?? 32);
+        $cost = max(1, $parameters->cost);
+        $keyLength = max(0, $parameters->keyLength);
 
         $derivedKey = hash_pbkdf2(
             $this->hmacAlgorithm->hashAlgo(),
