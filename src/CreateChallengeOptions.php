@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace AltchaOrg\Altcha;
 
 use AltchaOrg\Altcha\Algorithm\DeriveKeyInterface;
