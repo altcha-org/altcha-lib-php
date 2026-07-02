@@ -193,6 +193,35 @@ class AltchaTest extends TestCase
         self::assertTrue($result->invalidSignature);
     }
 
+    public function testMissingSignatureIsRejected(): void
+    {
+        $challenge = $this->altcha->createChallenge(new CreateChallengeOptions(
+            algorithm: $this->pbkdf2,
+            cost: 100,
+            keyPrefixLength: 1,
+            counter: 5,
+        ));
+
+        $solution = $this->altcha->solveChallenge(new SolveChallengeOptions(
+            challenge: $challenge,
+            algorithm: $this->pbkdf2,
+        ));
+
+        self::assertInstanceOf(Solution::class, $solution);
+
+        // Strip signature from challenge — must not bypass verification
+        $strippedChallenge = new Challenge($challenge->parameters, null);
+        $payload = new Payload($strippedChallenge, $solution);
+
+        $result = $this->altcha->verifySolution(new VerifySolutionOptions(
+            payload: $payload,
+            algorithm: $this->pbkdf2,
+        ));
+
+        self::assertFalse($result->verified);
+        self::assertTrue($result->invalidSignature);
+    }
+
     public function testInvalidSolution(): void
     {
         $challenge = $this->altcha->createChallenge(new CreateChallengeOptions(

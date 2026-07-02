@@ -116,7 +116,14 @@ class Altcha
         }
 
         // Verify challenge signature
-        if (null !== $payload->challenge->signature && null !== $this->hmacSignatureSecret) {
+        if (null !== $this->hmacSignatureSecret) {
+            if (null === $payload->challenge->signature) {
+                return new VerifySolutionResult(
+                    verified: false,
+                    invalidSignature: true,
+                    time: microtime(true) - $startTime,
+                );
+            }
             $expectedSignature = $this->hmacHex($params->toCanonicalJson(), $this->hmacSignatureSecret);
             if (!hash_equals($expectedSignature, $payload->challenge->signature)) {
                 return new VerifySolutionResult(
