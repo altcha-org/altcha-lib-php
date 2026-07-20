@@ -26,4 +26,20 @@ class Solution
 
         return $arr;
     }
+
+    /**
+     * @param array<string, mixed> $arr
+     */
+    public static function fromArray(array $arr): self
+    {
+        if (!isset($arr['counter'], $arr['derivedKey']) || !\is_int($arr['counter']) || !\is_string($arr['derivedKey'])) {
+            throw new \InvalidArgumentException('Invalid solution data: expected "counter" (int) and "derivedKey" (string).');
+        }
+
+        return new self(
+            counter: $arr['counter'],
+            derivedKey: $arr['derivedKey'],
+            time: isset($arr['time']) && is_numeric($arr['time']) ? (float) $arr['time'] : null,
+        );
+    }
 }

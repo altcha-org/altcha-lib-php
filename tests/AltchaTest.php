@@ -641,4 +641,115 @@ class AltchaTest extends TestCase
         self::assertArrayHasKey('signature', $decoded);
         self::assertEquals('signature', $decoded['signature']);
     }
+
+    public function testVerifySolutionAcceptsBase64String(): void
+    {
+        $challenge = $this->altcha->createChallenge(new CreateChallengeOptions(
+            algorithm: $this->pbkdf2,
+            cost: 100,
+            keyPrefixLength: 1,
+            counter: 5,
+        ));
+
+        $solution = $this->altcha->solveChallenge(new SolveChallengeOptions(
+            challenge: $challenge,
+            algorithm: $this->pbkdf2,
+        ));
+        self::assertInstanceOf(Solution::class, $solution);
+
+        $payload = new Payload($challenge, $solution);
+        $result = $this->altcha->verifySolution(new VerifySolutionOptions(
+            payload: $payload->toBase64(),
+            algorithm: $this->pbkdf2,
+        ));
+
+        self::assertTrue($result->verified);
+    }
+
+    public function testVerifySolutionAcceptsArray(): void
+    {
+        $challenge = $this->altcha->createChallenge(new CreateChallengeOptions(
+            algorithm: $this->pbkdf2,
+            cost: 100,
+            keyPrefixLength: 1,
+            counter: 5,
+        ));
+
+        $solution = $this->altcha->solveChallenge(new SolveChallengeOptions(
+            challenge: $challenge,
+            algorithm: $this->pbkdf2,
+        ));
+        self::assertInstanceOf(Solution::class, $solution);
+
+        $payload = new Payload($challenge, $solution);
+        $result = $this->altcha->verifySolution(new VerifySolutionOptions(
+            payload: $payload->toArray(),
+            algorithm: $this->pbkdf2,
+        ));
+
+        self::assertTrue($result->verified);
+    }
+
+    public function testVerifySolutionRejectsInvalidBase64(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        new VerifySolutionOptions(
+            payload: '$not-valid-base64$',
+            algorithm: $this->pbkdf2,
+        );
+    }
+
+    public function testVerifySolutionRejectsInvalidJson(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        new VerifySolutionOptions(
+            payload: base64_encode('not json'),
+            algorithm: $this->pbkdf2,
+        );
+    }
+
+    public function testVerifySolutionRejectsMissingKeysInBase64String(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        new VerifySolutionOptions(
+            payload: base64_encode(json_encode(['foo' => 'bar']) ?: ''),
+            algorithm: $this->pbkdf2,
+        );
+    }
+
+    public function testVerifySolutionRejectsMissingKeysInArray(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        new VerifySolutionOptions(
+            payload: ['foo' => 'bar'],
+            algorithm: $this->pbkdf2,
+        );
+    }
+
+    public function testPayloadFromArrayRoundTrip(): void
+    {
+        $challenge = $this->altcha->createChallenge(new CreateChallengeOptions(
+            algorithm: $this->pbkdf2,
+            cost: 100,
+            keyPrefixLength: 1,
+            counter: 5,
+        ));
+
+        $solution = $this->altcha->solveChallenge(new SolveChallengeOptions(
+            challenge: $challenge,
+            algorithm: $this->pbkdf2,
+        ));
+        self::assertInstanceOf(Solution::class, $solution);
+
+        $payload = new Payload($challenge, $solution);
+        $rebuilt = Payload::fromBase64($payload->toBase64());
+
+        self::assertEquals($payload->challenge->signature, $rebuilt->challenge->signature);
+        self::assertEquals($payload->solution->counter, $rebuilt->solution->counter);
+        self::assertEquals($payload->solution->derivedKey, $rebuilt->solution->derivedKey);
+    }
 }

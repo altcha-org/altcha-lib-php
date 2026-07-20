@@ -22,12 +22,8 @@ require __DIR__ . '/../vendor/autoload.php';
 
 use AltchaOrg\Altcha\Altcha;
 use AltchaOrg\Altcha\Algorithm\Pbkdf2;
-use AltchaOrg\Altcha\ChallengeParameters;
-use AltchaOrg\Altcha\Challenge;
 use AltchaOrg\Altcha\CreateChallengeOptions;
-use AltchaOrg\Altcha\Payload;
 use AltchaOrg\Altcha\ServerSignature;
-use AltchaOrg\Altcha\Solution;
 use AltchaOrg\Altcha\VerifySolutionOptions;
 
 // -- Configuration --
@@ -84,51 +80,34 @@ function handleSubmit(Altcha $altcha, Pbkdf2 $pbkdf2, string $hmacSecret): void
         return;
     }
 
-    // Decode the base64-encoded payload
-    $decoded = base64_decode($altchaField, true);
-    if ($decoded === false) {
-        sendJson(['error' => 'Invalid base64 in "altcha" field'], 400);
-        return;
-    }
-
-    $payload = json_decode($decoded, true);
-    if (!is_array($payload)) {
-        sendJson(['error' => 'Invalid JSON in "altcha" field'], 400);
-        return;
-    }
-
-    // Auto-detect payload type:
+    // Decode just enough to auto-detect the payload type:
     //   Server signature: has "verificationData"
     //   Client solution:  has "challenge" + "solution"
-    if (isset($payload['verificationData'])) {
-        $result = ServerSignature::verifyServerSignature($payload, $hmacSecret);
-        $verified = $result->verified;
-    } elseif (isset($payload['challenge'], $payload['solution'])) {
-        $challengeData = $payload['challenge'];
-        $solutionData = $payload['solution'];
+    $decoded = base64_decode($altchaField, true);
+    $payload = $decoded === false ? null : json_decode($decoded, true);
+    if (!is_array($payload)) {
+        sendJson(['error' => 'Invalid "altcha" field'], 400);
+        return;
+    }
 
-        if (!is_array($challengeData) || !is_array($solutionData)) {
-            sendJson(['error' => 'Invalid challenge or solution format'], 400);
+    try {
+        if (isset($payload['verificationData'])) {
+            $result = ServerSignature::verifyServerSignature($payload, $hmacSecret);
+            $verified = $result->verified;
+        } elseif (isset($payload['challenge'], $payload['solution'])) {
+            // The library accepts the raw base64 string, a decoded array, or a
+            // Payload object directly — no manual parsing required.
+            $result = $altcha->verifySolution(new VerifySolutionOptions(
+                payload: $payload,
+                algorithm: $pbkdf2,
+            ));
+            $verified = $result->verified;
+        } else {
+            sendJson(['error' => 'Unrecognized payload format'], 400);
             return;
         }
-
-        $challenge = new Challenge(
-            ChallengeParameters::fromArray($challengeData['parameters'] ?? []),
-            $challengeData['signature'] ?? null,
-        );
-        $solution = new Solution(
-            counter: (int) ($solutionData['counter'] ?? 0),
-            derivedKey: (string) ($solutionData['derivedKey'] ?? ''),
-        );
-        $result = $altcha->verifySolution(new VerifySolutionOptions(
-            payload: new Payload($challenge, $solution),
-            algorithm: $pbkdf2,
-        ));
-        $verified = $result->verified;
-    } else {
-        sendJson([
-            'error' => 'Unrecognized payload format',
-        ], 400);
+    } catch (\InvalidArgumentException $e) {
+        sendJson(['error' => $e->getMessage()], 400);
         return;
     }
 

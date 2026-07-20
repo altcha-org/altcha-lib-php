@@ -70,6 +70,16 @@ if ($solution !== null) {
 }
 ```
 
+`VerifySolutionOptions::$payload` also accepts the raw base64-encoded string posted by the widget, or a decoded associative array — no manual parsing required:
+
+```php
+// $_POST['altcha'] is the base64-encoded payload string from the widget
+$result = $altcha->verifySolution(new VerifySolutionOptions(
+    payload: $_POST['altcha'],
+    algorithm: $pbkdf2,
+));
+```
+
 ## API
 
 ### `Altcha`
@@ -131,7 +141,7 @@ Verifies a solution against its challenge.
 | Parameter | Type | Default | Description |
 |---|---|---|---|
 | `algorithm` | `DeriveKeyInterface` | required | Key derivation algorithm |
-| `payload` | `Payload` | required | Challenge + solution pair |
+| `payload` | `Payload\|string\|array` | required | Challenge + solution pair — a `Payload` object, a raw base64-encoded payload string (as posted by the widget), or a decoded associative array. Throws `InvalidArgumentException` if a string/array can't be parsed into a valid payload. |
 
 #### `VerifySolutionResult`
 

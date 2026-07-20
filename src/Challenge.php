@@ -27,4 +27,22 @@ class Challenge
     {
         return json_encode($this->toArray(), \JSON_UNESCAPED_SLASHES | \JSON_UNESCAPED_UNICODE) ?: '';
     }
+
+    /**
+     * @param array<string, mixed> $arr
+     */
+    public static function fromArray(array $arr): self
+    {
+        if (!isset($arr['parameters']) || !\is_array($arr['parameters'])) {
+            throw new \InvalidArgumentException('Invalid challenge data: expected "parameters" (array).');
+        }
+
+        /** @var array<string, mixed> $parameters */
+        $parameters = $arr['parameters'];
+
+        return new self(
+            parameters: ChallengeParameters::fromArray($parameters),
+            signature: isset($arr['signature']) && \is_string($arr['signature']) ? $arr['signature'] : null,
+        );
+    }
 }
