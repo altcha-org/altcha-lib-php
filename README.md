@@ -14,6 +14,7 @@ A lightweight PHP library for creating and verifying [ALTCHA](https://altcha.org
 
 - [Basic Server](/examples/server.php)
 - [Server Signature](/examples/server_verify.php)
+- [ALTCHA Sentinel](/examples/server_sentinel.php)
 
 ## Installation
 
@@ -242,6 +243,68 @@ $isValid = ServerSignature::verifyFieldsHash(
     fields: ['name', 'email'],
     fieldsHash: hash('sha256', "John\njohn@example.com"),
 );
+```
+
+### `Sentinel::verify(VerifyServerOptions $options): VerifyServerResult`
+
+Verifies a payload remotely by calling [ALTCHA Sentinel](https://altcha.org)'s `POST /v1/verify/signature` API, instead of verifying the HMAC signature locally. Useful when Sentinel issues and signs challenges directly, so your server doesn't need to hold the HMAC secret at all.
+
+```php
+use AltchaOrg\Altcha\Sentinel;
+use AltchaOrg\Altcha\VerifyServerOptions;
+
+$result = Sentinel::verify(new VerifyServerOptions(
+    payload: $_POST['altcha'], // raw base64 string, or a decoded array
+    url: 'https://sentinel.example.com/v1/verify/signature',
+    secret: $sentinelApiKeySecret, // optional, checked against the payload's API key
+    timeout: 10.0,
+    retries: 2,
+));
+
+if ($result->verified) {
+    // ...
+}
+```
+
+#### `VerifyServerOptions`
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `payload` | `string\|array` | required | The payload to verify, as received from the client (raw base64 string or decoded array) |
+| `url` | `string` | required | Full URL of the Sentinel `/v1/verify/signature` endpoint |
+| `secret` | `?string` | `null` | API key secret checked against the payload's API key |
+| `httpClient` | `?HttpClientInterface` | `null` | Custom HTTP client. Defaults to a built-in stream-based client requiring no extra extension |
+| `headers` | `array<string, string>` | `[]` | Additional headers to send with the request |
+| `timeout` | `float` | `10.0` | Per-attempt request timeout in seconds |
+| `retries` | `int` | `0` | Number of retry attempts after the first try |
+| `retryDelay` | `int` | `300` | Base delay in milliseconds between retries |
+| `retryBackoff` | `RetryBackoff` | `RetryBackoff::Exponential` | Backoff strategy (`Fixed` or `Exponential`) applied to `retryDelay` |
+
+A `4xx`/non-2xx HTTP response and network errors are retried up to `retries` times (with backoff), except HTTP `400`, which is treated as a definitive verification failure and returned immediately.
+
+#### `VerifyServerResult`
+
+| Property | Type | Description |
+|---|---|---|
+| `verified` | `bool` | Whether the payload was successfully verified |
+| `apiKey` | `?string` | API key associated with the verification |
+| `reason` | `?string` | Reason or error message if verification failed |
+| `verificationData` | `?ServerSignatureVerificationData` | Verification data returned by Sentinel |
+
+To use your own HTTP client (e.g. Guzzle, Symfony HttpClient) instead of the built-in stream-based one, implement `AltchaOrg\Altcha\Http\HttpClientInterface` and pass it via `httpClient`:
+
+```php
+use AltchaOrg\Altcha\Http\HttpClientInterface;
+use AltchaOrg\Altcha\Http\HttpResponse;
+
+class MyHttpClient implements HttpClientInterface
+{
+    public function send(string $url, string $method, array $headers, string $body, float $timeout): HttpResponse
+    {
+        // ... perform the request with your client of choice ...
+        return new HttpResponse($statusCode, $responseBody);
+    }
+}
 ```
 
 ### `Payload`

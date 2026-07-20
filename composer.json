@@ -8,6 +8,11 @@
             "AltchaOrg\\Altcha\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "AltchaOrg\\Altcha\\Tests\\": "tests/"
+        }
+    },
     "authors": [
         {
             "name": "Daniel Regeci",
