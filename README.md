@@ -113,7 +113,7 @@ Creates a new challenge.
 | `parallelism` | `?int` | `null` | Parallelism factor (Scrypt) |
 | `salt` | `?string` | `null` | Custom salt (hex) |
 
-When `counter` is provided and `hmacKeySignatureSecret` is set, the challenge includes a `keySignature` for fast verification (skips re-derivation).
+When `counter` is provided and `hmacKeySignatureSecret` is set, the challenge includes a `keySignature` (HMAC of the raw derived key bytes, compatible with `altcha-lib` for JS) for fast verification. Verification then only checks the submitted key against `keySignature` and skips re-derivation; a mismatch fails as `invalidSolution` with no fallback.
 
 **Returns:** `Challenge` with `parameters` (`ChallengeParameters`) and `signature`.
 

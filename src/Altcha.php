@@ -39,7 +39,7 @@ class Altcha
             $result = $this->deriveKeyForCounter($options->algorithm, $params, $options->counter);
             $keyPrefix = bin2hex(substr($result, 0, $keyPrefixLength));
             if (null !== $this->hmacKeySignatureSecret) {
-                $keySignature = $this->hmacHex(bin2hex($result), $this->hmacKeySignatureSecret);
+                $keySignature = $this->hmacHex($result, $this->hmacKeySignatureSecret);
             }
         } elseif (empty($keyPrefix)) {
             // Generate a random prefix of the desired hex length
@@ -134,16 +134,19 @@ class Altcha
             }
         }
 
-        // Verify solution: fast path via keySignature, or full re-derivation
+        // Fast path: the challenge carries an HMAC of the raw derived key bytes. A mismatch is final
+        // (no fallback to re-derivation), matching altcha-lib (JS).
         if (null !== $params->keySignature && null !== $this->hmacKeySignatureSecret) {
-            // Fast path: verify the HMAC of the submitted derived key
-            $expectedKeySignature = $this->hmacHex($payload->solution->derivedKey, $this->hmacKeySignatureSecret);
-            if (hash_equals($expectedKeySignature, $params->keySignature)) {
-                return new VerifySolutionResult(
-                    verified: true,
-                    time: microtime(true) - $startTime,
-                );
-            }
+            $derivedKey = $payload->solution->derivedKey;
+            $derivedKeyBytes = 1 === preg_match('/\A(?:[0-9a-fA-F]{2})*\z/', $derivedKey) ? hex2bin($derivedKey) : false;
+            $verified = false !== $derivedKeyBytes
+                && hash_equals($params->keySignature, $this->hmacHex($derivedKeyBytes, $this->hmacKeySignatureSecret));
+
+            return new VerifySolutionResult(
+                verified: $verified,
+                invalidSolution: $verified ? null : true,
+                time: microtime(true) - $startTime,
+            );
         }
 
         // Full re-derivation path

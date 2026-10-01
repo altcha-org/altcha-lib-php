@@ -393,6 +393,53 @@ class AltchaTest extends TestCase
         self::assertTrue($result->verified);
     }
 
+    public function testKeySignatureMatchesJsLibrary(): void
+    {
+        // Vector produced by altcha-lib (JS): HMAC-SHA256('test-key-secret', raw derived key bytes)
+        $challenge = $this->altcha->createChallenge(new CreateChallengeOptions(
+            algorithm: $this->pbkdf2,
+            cost: 1000,
+            counter: 42,
+            nonce: 'aabbccdd00112233aabbccdd00112233',
+            salt: '11223344556677889900aabbccddeeff',
+        ));
+
+        self::assertSame('5407a44a6e9f4a8e4698cb44cfae6292476524b61f3ce219fbb407267c951caa', $challenge->parameters->keySignature);
+
+        $result = $this->altcha->verifySolution(new VerifySolutionOptions(
+            payload: new Payload($challenge, new Solution(42, 'f2e25aab6d5e504747ad0f52b1ce42afd99d8014634f263ea42b206300037acf')),
+            algorithm: $this->pbkdf2,
+        ));
+
+        self::assertTrue($result->verified);
+    }
+
+    public function testKeySignatureMismatchDoesNotFallBackToDerivation(): void
+    {
+        // Same challenge-signing secret, different key-signing secret: the solution is valid,
+        // but the keySignature cannot match, and (like altcha-lib JS) the mismatch is final.
+        $minter = new Altcha('test-secret', 'other-key-secret');
+        $challenge = $minter->createChallenge(new CreateChallengeOptions(
+            algorithm: $this->pbkdf2,
+            cost: 100,
+            keyPrefixLength: 1,
+            counter: 10,
+        ));
+        $solution = $minter->solveChallenge(new SolveChallengeOptions(
+            challenge: $challenge,
+            algorithm: $this->pbkdf2,
+        ));
+        self::assertInstanceOf(Solution::class, $solution);
+
+        $result = $this->altcha->verifySolution(new VerifySolutionOptions(
+            payload: new Payload($challenge, $solution),
+            algorithm: $this->pbkdf2,
+        ));
+
+        self::assertFalse($result->verified);
+        self::assertTrue($result->invalidSolution);
+    }
+
     public function testServerSignatureVerification(): void
     {
         $hmacKey = 'server-secret';
