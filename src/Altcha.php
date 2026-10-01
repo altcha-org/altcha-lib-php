@@ -72,8 +72,8 @@ class Altcha
         $params = $options->challenge->parameters;
         $nonceBytes = hex2bin($params->nonce) ?: '';
         $saltBytes = hex2bin($params->salt) ?: '';
-        $keyPrefixBytes = hex2bin($params->keyPrefix) ?: '';
-        $keyPrefixLen = \strlen($keyPrefixBytes);
+        $keyPrefix = $params->keyPrefix;
+        $keyPrefixBytes = self::hexToBytes($keyPrefix);
 
         $startTime = microtime(true);
         $deadline = $startTime + $options->timeout;
@@ -86,7 +86,7 @@ class Altcha
             $result = $options->algorithm->deriveKey($params, $saltBytes, $password);
             $derivedKey = $result->derivedKey;
 
-            if (substr($derivedKey, 0, $keyPrefixLen) === $keyPrefixBytes) {
+            if (self::hasKeyPrefix($derivedKey, $keyPrefix, $keyPrefixBytes)) {
                 $time = microtime(true) - $startTime;
 
                 return new Solution($counter, bin2hex($derivedKey), $time);
@@ -137,9 +137,8 @@ class Altcha
         // Fast path: the challenge carries an HMAC of the raw derived key bytes. A mismatch is final
         // (no fallback to re-derivation), matching altcha-lib (JS).
         if (null !== $params->keySignature && null !== $this->hmacKeySignatureSecret) {
-            $derivedKey = $payload->solution->derivedKey;
-            $derivedKeyBytes = 1 === preg_match('/\A(?:[0-9a-fA-F]{2})*\z/', $derivedKey) ? hex2bin($derivedKey) : false;
-            $verified = false !== $derivedKeyBytes
+            $derivedKeyBytes = self::hexToBytes($payload->solution->derivedKey);
+            $verified = null !== $derivedKeyBytes
                 && hash_equals($params->keySignature, $this->hmacHex($derivedKeyBytes, $this->hmacKeySignatureSecret));
 
             return new VerifySolutionResult(
@@ -166,10 +165,8 @@ class Altcha
         }
 
         // Verify the derived key starts with the required prefix
-        $keyPrefixBytes = hex2bin($params->keyPrefix) ?: '';
-        $keyPrefixLen = \strlen($keyPrefixBytes);
-
-        if (substr($result->derivedKey, 0, $keyPrefixLen) !== $keyPrefixBytes) {
+        $keyPrefix = $params->keyPrefix;
+        if (!self::hasKeyPrefix($result->derivedKey, $keyPrefix, self::hexToBytes($keyPrefix))) {
             return new VerifySolutionResult(
                 verified: false,
                 invalidSolution: true,
@@ -197,5 +194,24 @@ class Altcha
     private function hmacHex(string $data, string $key): string
     {
         return bin2hex(hash_hmac($this->hmacAlgorithm->hashAlgo(), $data, $key, true));
+    }
+
+    /**
+     * Decodes an even-length hex string; returns null for anything else (no hex2bin warning).
+     */
+    private static function hexToBytes(string $hex): ?string
+    {
+        return 1 === preg_match('/\A(?:[0-9a-fA-F]{2})*\z/', $hex) ? (string) hex2bin($hex) : null;
+    }
+
+    /**
+     * Even-length prefixes compare bytes; odd-length (half-byte) prefixes compare the lowercase
+     * hex string, matching altcha-lib (JS).
+     */
+    private static function hasKeyPrefix(string $derivedKey, string $keyPrefix, ?string $keyPrefixBytes): bool
+    {
+        return null !== $keyPrefixBytes
+            ? str_starts_with($derivedKey, $keyPrefixBytes)
+            : str_starts_with(bin2hex($derivedKey), $keyPrefix);
     }
 }

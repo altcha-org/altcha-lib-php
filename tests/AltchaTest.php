@@ -69,7 +69,6 @@ class AltchaTest extends TestCase
         $challenge = $this->altcha->createChallenge(new CreateChallengeOptions(
             algorithm: $this->pbkdf2,
             cost: 100,
-            keyPrefixLength: 1,
             counter: 5,
         ));
 
@@ -142,7 +141,6 @@ class AltchaTest extends TestCase
         $challenge = $this->altcha->createChallenge(new CreateChallengeOptions(
             algorithm: $this->pbkdf2,
             cost: 100,
-            keyPrefixLength: 1,
             counter: 5,
             expiresAt: time() - 10, // expired 10 seconds ago
         ));
@@ -169,7 +167,6 @@ class AltchaTest extends TestCase
         $challenge = $this->altcha->createChallenge(new CreateChallengeOptions(
             algorithm: $this->pbkdf2,
             cost: 100,
-            keyPrefixLength: 1,
             counter: 5,
         ));
 
@@ -198,7 +195,6 @@ class AltchaTest extends TestCase
         $challenge = $this->altcha->createChallenge(new CreateChallengeOptions(
             algorithm: $this->pbkdf2,
             cost: 100,
-            keyPrefixLength: 1,
             counter: 5,
         ));
 
@@ -227,7 +223,6 @@ class AltchaTest extends TestCase
         $challenge = $this->altcha->createChallenge(new CreateChallengeOptions(
             algorithm: $this->pbkdf2,
             cost: 100,
-            keyPrefixLength: 1,
             counter: 5,
         ));
 
@@ -371,7 +366,6 @@ class AltchaTest extends TestCase
         $challenge = $this->altcha->createChallenge(new CreateChallengeOptions(
             algorithm: $this->pbkdf2,
             cost: 100,
-            keyPrefixLength: 1,
             counter: 10,
         ));
 
@@ -422,7 +416,6 @@ class AltchaTest extends TestCase
         $challenge = $minter->createChallenge(new CreateChallengeOptions(
             algorithm: $this->pbkdf2,
             cost: 100,
-            keyPrefixLength: 1,
             counter: 10,
         ));
         $solution = $minter->solveChallenge(new SolveChallengeOptions(
@@ -436,6 +429,43 @@ class AltchaTest extends TestCase
             algorithm: $this->pbkdf2,
         ));
 
+        self::assertFalse($result->verified);
+        self::assertTrue($result->invalidSolution);
+    }
+
+    public function testOddLengthKeyPrefix(): void
+    {
+        $altcha = new Altcha('test-secret');
+        $challenge = $altcha->createChallenge(new CreateChallengeOptions(
+            algorithm: $this->pbkdf2,
+            cost: 100,
+            keyPrefix: 'a',
+        ));
+        $params = $challenge->parameters;
+
+        $solution = $altcha->solveChallenge(new SolveChallengeOptions(
+            challenge: $challenge,
+            algorithm: $this->pbkdf2,
+        ));
+        self::assertInstanceOf(Solution::class, $solution);
+        self::assertStringStartsWith('a', $solution->derivedKey);
+        self::assertTrue($altcha->verifySolution(new VerifySolutionOptions(
+            payload: new Payload($challenge, $solution),
+            algorithm: $this->pbkdf2,
+        ))->verified);
+
+        // A genuinely derived key that does not start with the half-byte prefix must be rejected
+        for ($counter = 0;; $counter++) {
+            $key = bin2hex($this->pbkdf2->deriveKey($params, (string) hex2bin($params->salt), hex2bin($params->nonce) . pack('N', $counter))->derivedKey);
+            if (!str_starts_with($key, 'a')) {
+                break;
+            }
+        }
+
+        $result = $altcha->verifySolution(new VerifySolutionOptions(
+            payload: new Payload($challenge, new Solution($counter, $key)),
+            algorithm: $this->pbkdf2,
+        ));
         self::assertFalse($result->verified);
         self::assertTrue($result->invalidSolution);
     }
@@ -528,7 +558,6 @@ class AltchaTest extends TestCase
         $challenge = $this->altcha->createChallenge(new CreateChallengeOptions(
             algorithm: $this->pbkdf2,
             cost: 100,
-            keyPrefixLength: 1,
             counter: 1,
             data: ['foo' => 'bar'],
         ));
@@ -575,7 +604,6 @@ class AltchaTest extends TestCase
         $challenge = $this->altcha->createChallenge(new CreateChallengeOptions(
             algorithm: $sha,
             cost: 0,
-            keyPrefixLength: 1,
             counter: 5,
         ));
 
@@ -605,7 +633,6 @@ class AltchaTest extends TestCase
             algorithm: $sha,
             cost: 0,
             keyLength: 64,
-            keyPrefixLength: 1,
             counter: 3,
         ));
 
@@ -635,7 +662,6 @@ class AltchaTest extends TestCase
             algorithm: $sha,
             cost: 0,
             keyLength: 20,
-            keyPrefixLength: 1,
             counter: 7,
         ));
 
@@ -694,7 +720,6 @@ class AltchaTest extends TestCase
         $challenge = $this->altcha->createChallenge(new CreateChallengeOptions(
             algorithm: $this->pbkdf2,
             cost: 100,
-            keyPrefixLength: 1,
             counter: 5,
         ));
 
@@ -718,7 +743,6 @@ class AltchaTest extends TestCase
         $challenge = $this->altcha->createChallenge(new CreateChallengeOptions(
             algorithm: $this->pbkdf2,
             cost: 100,
-            keyPrefixLength: 1,
             counter: 5,
         ));
 
@@ -782,7 +806,6 @@ class AltchaTest extends TestCase
         $challenge = $this->altcha->createChallenge(new CreateChallengeOptions(
             algorithm: $this->pbkdf2,
             cost: 100,
-            keyPrefixLength: 1,
             counter: 5,
         ));
 
