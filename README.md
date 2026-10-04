@@ -106,7 +106,7 @@ Creates a new challenge.
 | `algorithm` | `DeriveKeyInterface` | required | Key derivation algorithm |
 | `cost` | `int` | required | Iterations/time cost |
 | `counter` | `?int` | `null` | Counter for deterministic mode |
-| `data` | `?array` | `null` | Custom metadata |
+| `data` | `?array` | `null` | Custom metadata, a JSON object of scalar/`null` values (as in `altcha-lib` JS); signed in the same canonical form as JS. Strings must be valid UTF-8 (otherwise `JsonException`) |
 | `expiresAt` | `DateTimeInterface\|int\|float\|null` | `null` | Unix timestamp (seconds, fractional allowed) for expiration; `0` means no expiry |
 | `keyLength` | `int` | `32` | Derived key length in bytes |
 | `keyPrefixLength` | `int` | `keyLength / 2` | Key prefix length in bytes |

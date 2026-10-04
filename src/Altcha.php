@@ -118,10 +118,16 @@ class Altcha
         // signature, or a verifier without a signature secret, can never verify.
         $secret = $this->signatureSecret();
         $signature = $payload->challenge->signature;
+        try {
+            $canonicalJson = $params->toCanonicalJson();
+        } catch (\JsonException) {
+            $canonicalJson = null; // e.g. invalid UTF-8 in parameters passed as a PHP array
+        }
         if (
             null === $secret
             || null === $signature
-            || !hash_equals($this->hmacHex($params->toCanonicalJson(), $secret), $signature)
+            || null === $canonicalJson
+            || !hash_equals($this->hmacHex($canonicalJson, $secret), $signature)
         ) {
             return new VerifySolutionResult(
                 verified: false,

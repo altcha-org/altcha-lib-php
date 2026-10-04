@@ -305,29 +305,39 @@ class AltchaTest extends TestCase
         self::assertTrue($result->invalidSolution);
     }
 
-    public function testChallengeParametersCanonicalJson(): void
+    public function testCanonicalJsonMatchesJsLibrary(): void
     {
-        $params = new ChallengeParameters(
-            algorithm: 'PBKDF2/SHA-256',
-            nonce: 'abc123',
-            salt: 'def456',
-            cost: 1000,
-            keyLength: 32,
-            keyPrefix: 'ff',
-        );
+        // Expected strings produced by altcha-lib (JS) canonicalJSON() for the same parameters.
+        $base = '"algorithm":"PBKDF2/SHA-256","cost":1,';
+        $tail = ',"keyLength":32,"keyPrefix":"00","nonce":"aa","salt":"bb"}';
+        $cases = [
+            // Key order (array-index keys first, UTF-16 order), JS number formatting, U+2028, fractional expiresAt
+            [
+                '{"10":1,"9":2,"b":"\u2028/","a":null,"😀":true,"！":18446744073709551616,"tiny":1e-7,"small":0.000001,"i":1152921504606846976,"f":0.30000000000000004}',
+                '{' . $base . "\"data\":{\"9\":2,\"10\":1,\"a\":null,\"b\":\"\u{2028}/\",\"f\":0.30000000000000004,\"i\":1152921504606847000,\"small\":0.000001,\"tiny\":1e-7,\"😀\":true,\"！\":18446744073709552000},\"expiresAt\":1790903243.159" . $tail,
+            ],
+            ['{}', '{' . $base . '"data":{},"expiresAt":1790903243.159' . $tail],
+            ['{"0":"a","1":"b"}', '{' . $base . '"data":{"0":"a","1":"b"},"expiresAt":1790903243.159' . $tail],
+            // Objects inside lists keep insertion order (index keys first), like JS sortKeys(); 2^-24 and 2^89
+            // have a shorter round-trip form above the value
+            [
+                '{"q":6.1897001964269014e+26,"p":5.9604644775390625e-8,"l":[{"z":1,"1":"x","a":{"y":1,"b":2}}]}',
+                '{' . $base . '"data":{"l":[{"1":"x","z":1,"a":{"y":1,"b":2}}],"p":5.960464477539063e-8,"q":6.189700196426902e+26},"expiresAt":1790903243.159' . $tail,
+            ],
+        ];
 
-        $json = $params->toCanonicalJson();
-        /** @var array<string, mixed> $decoded */
-        $decoded = json_decode($json, true);
+        foreach ($cases as [$dataJson, $expected]) {
+            $wire = '{' . $base . '"data":' . $dataJson . ',"expiresAt":1790903243.159' . $tail;
+            /** @var array<string, mixed> $decoded */
+            $decoded = json_decode($wire, true, 512, \JSON_THROW_ON_ERROR);
+            $params = ChallengeParameters::fromArray($decoded);
 
-        // Keys should be sorted
-        $keys = array_keys($decoded);
-        $sortedKeys = $keys;
-        sort($sortedKeys);
-        self::assertEquals($sortedKeys, $keys);
-
-        self::assertEquals('PBKDF2/SHA-256', $decoded['algorithm']);
-        self::assertEquals(1000, $decoded['cost']);
+            self::assertSame($expected, $params->toCanonicalJson(), $dataJson);
+            // The wire format keeps `data` an object, so a JS verifier canonicalizes it the same way.
+            /** @var array{parameters: array<string, mixed>} $rewired */
+            $rewired = json_decode((new Challenge($params, null))->toJson(), true, 512, \JSON_THROW_ON_ERROR);
+            self::assertSame($expected, ChallengeParameters::fromArray($rewired['parameters'])->toCanonicalJson(), $dataJson);
+        }
     }
 
     public function testChallengeParametersFromArray(): void
