@@ -17,7 +17,7 @@ class ChallengeParameters
         public readonly ?string $keySignature = null,
         public readonly ?int $memoryCost = null,
         public readonly ?int $parallelism = null,
-        public readonly ?int $expiresAt = null,
+        public readonly int|float|null $expiresAt = null,
         public readonly ?array $data = null,
     ) {
     }
@@ -100,7 +100,8 @@ class ChallengeParameters
         $keySignature = isset($arr['keySignature']) && \is_string($arr['keySignature']) ? $arr['keySignature'] : null;
         $memoryCost = isset($arr['memoryCost']) && \is_int($arr['memoryCost']) ? $arr['memoryCost'] : null;
         $parallelism = isset($arr['parallelism']) && \is_int($arr['parallelism']) ? $arr['parallelism'] : null;
-        $expiresAt = isset($arr['expiresAt']) && \is_int($arr['expiresAt']) ? $arr['expiresAt'] : null;
+        // JS issuers may send a fractional expiresAt (e.g. Date.now() / 1000 + 600); it is signed as-is.
+        $expiresAt = isset($arr['expiresAt']) && (\is_int($arr['expiresAt']) || \is_float($arr['expiresAt'])) ? $arr['expiresAt'] : null;
         /** @var null|array<string, mixed> $data */
         $data = isset($arr['data']) && \is_array($arr['data']) ? $arr['data'] : null;
 

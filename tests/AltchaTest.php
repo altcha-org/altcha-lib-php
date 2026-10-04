@@ -162,6 +162,41 @@ class AltchaTest extends TestCase
         self::assertTrue($result->expired);
     }
 
+    public function testExpiresAtMatchesJsSemantics(): void
+    {
+        // altcha-lib (JS): `expiresAt && expiresAt < Date.now() / 1000` — 0 means no expiry, negative is
+        // expired, fractional values are allowed and compared against fractional seconds (no 1 s grace).
+        $cases = [
+            'zero: no expiry' => [0, false],
+            'negative' => [-1, true],
+            'fractional, half a second ago' => [microtime(true) - 0.5, true],
+            'fractional, future' => [microtime(true) + 600.25, false],
+        ];
+
+        foreach ($cases as $name => [$expiresAt, $expired]) {
+            $challenge = $this->altcha->createChallenge(new CreateChallengeOptions(
+                algorithm: $this->pbkdf2,
+                cost: 100,
+                counter: 5,
+                expiresAt: $expiresAt,
+            ));
+            $solution = $this->altcha->solveChallenge(new SolveChallengeOptions(
+                challenge: $challenge,
+                algorithm: $this->pbkdf2,
+            ));
+            self::assertInstanceOf(Solution::class, $solution);
+
+            // Base64 round trip: a fractional expiresAt must survive decoding and stay covered by the signature.
+            $result = $this->altcha->verifySolution(new VerifySolutionOptions(
+                payload: (new Payload($challenge, $solution))->toBase64(),
+                algorithm: $this->pbkdf2,
+            ));
+
+            self::assertSame($expired, $result->expired, $name);
+            self::assertSame(!$expired, $result->verified, $name);
+        }
+    }
+
     public function testInvalidSignature(): void
     {
         $challenge = $this->altcha->createChallenge(new CreateChallengeOptions(

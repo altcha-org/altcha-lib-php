@@ -107,7 +107,7 @@ Creates a new challenge.
 | `cost` | `int` | required | Iterations/time cost |
 | `counter` | `?int` | `null` | Counter for deterministic mode |
 | `data` | `?array` | `null` | Custom metadata |
-| `expiresAt` | `?int` | `null` | Unix timestamp for expiration |
+| `expiresAt` | `DateTimeInterface\|int\|float\|null` | `null` | Unix timestamp (seconds, fractional allowed) for expiration; `0` means no expiry |
 | `keyLength` | `int` | `32` | Derived key length in bytes |
 | `keyPrefixLength` | `int` | `keyLength / 2` | Key prefix length in bytes |
 | `memoryCost` | `?int` | `null` | Memory cost (Argon2id/Scrypt) |

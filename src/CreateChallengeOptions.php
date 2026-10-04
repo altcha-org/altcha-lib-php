@@ -6,7 +6,7 @@ use AltchaOrg\Altcha\Algorithm\DeriveKeyInterface;
 
 class CreateChallengeOptions
 {
-    public readonly ?int $expiresAt;
+    public readonly int|float|null $expiresAt;
 
     /**
      * @param null|array<string, mixed> $data
@@ -19,7 +19,7 @@ class CreateChallengeOptions
         public readonly ?int $counter = null,
         public readonly ?int $memoryCost = null,
         public readonly ?int $parallelism = null,
-        \DateTimeInterface|int|null $expiresAt = null,
+        \DateTimeInterface|int|float|null $expiresAt = null,
         public readonly ?array $data = null,
         public readonly ?string $nonce = null,
         public readonly ?string $salt = null,

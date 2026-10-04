@@ -103,9 +103,9 @@ class Altcha
         $payload = $options->payload;
         $params = $payload->challenge->parameters;
 
-        // Check expiration
-        if (null !== $params->expiresAt) {
-            if (time() > $params->expiresAt) {
+        // Check expiration: 0 means no expiry; fractional-second comparison, matching altcha-lib (JS)
+        if ($params->expiresAt) {
+            if ($params->expiresAt < microtime(true)) {
                 return new VerifySolutionResult(
                     verified: false,
                     expired: true,
