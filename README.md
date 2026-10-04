@@ -93,6 +93,8 @@ $altcha = new Altcha(
 );
 ```
 
+`hmacSignatureSecret` is required for verification: without it (or with `''`), `createChallenge` returns unsigned challenges and `verifySolution` always fails with `invalidSignature`. Omit it only when creating/solving challenges you never verify (e.g. `Obfuscator`).
+
 ### `Altcha::createChallenge(CreateChallengeOptions $options): Challenge`
 
 Creates a new challenge.

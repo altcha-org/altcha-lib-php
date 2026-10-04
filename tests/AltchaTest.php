@@ -218,6 +218,37 @@ class AltchaTest extends TestCase
         self::assertTrue($result->invalidSignature);
     }
 
+    public function testVerifierWithoutSignatureSecretRejectsEverything(): void
+    {
+        // Without a signature secret the parameters can't be authenticated, so a client could pick
+        // its own keyPrefix/cost. Verification must fail closed, like altcha-lib (JS).
+        foreach ([null, ''] as $secret) {
+            $altcha = new Altcha($secret);
+            $challenge = $altcha->createChallenge(new CreateChallengeOptions(
+                algorithm: $this->pbkdf2,
+                cost: 100,
+                counter: 5,
+            ));
+            self::assertNull($challenge->signature);
+
+            $solution = $altcha->solveChallenge(new SolveChallengeOptions(
+                challenge: $challenge,
+                algorithm: $this->pbkdf2,
+            ));
+            self::assertInstanceOf(Solution::class, $solution);
+
+            foreach ([null, 'deadbeef'] as $signature) {
+                $result = $altcha->verifySolution(new VerifySolutionOptions(
+                    payload: new Payload(new Challenge($challenge->parameters, $signature), $solution),
+                    algorithm: $this->pbkdf2,
+                ));
+
+                self::assertFalse($result->verified);
+                self::assertTrue($result->invalidSignature);
+            }
+        }
+    }
+
     public function testInvalidSolution(): void
     {
         $challenge = $this->altcha->createChallenge(new CreateChallengeOptions(
