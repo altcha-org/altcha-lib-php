@@ -249,14 +249,40 @@ $isValid = ServerSignature::verifyFieldsHash(
 
 ### `Sentinel::verify(VerifyServerOptions $options): VerifyServerResult`
 
-Verifies a payload remotely by calling [ALTCHA Sentinel](https://altcha.org)'s `POST /v1/verify/signature` API, instead of verifying the HMAC signature locally. Useful when Sentinel issues and signs challenges directly, so your server doesn't need to hold the HMAC secret at all.
+Verifies a payload remotely by calling [ALTCHA Sentinel](https://altcha.org)'s verify signature API, instead of verifying the HMAC signature locally. Useful when Sentinel issues and signs challenges directly, so your server doesn't need to hold the HMAC secret at all. Both Sentinel v2 (`POST /v2/verify/signature`) and Sentinel v1 (`POST /v1/verify/signature`) are supported; they differ in how the request is authenticated.
+
+#### Sentinel v2
+
+```php
+use AltchaOrg\Altcha\Sentinel;
+use AltchaOrg\Altcha\VerifyServerApiKey;
+use AltchaOrg\Altcha\VerifyServerOptions;
+
+$result = Sentinel::verify(new VerifyServerOptions(
+    payload: $_POST['altcha'], // raw base64 string from POST /v2/verify, or a decoded array
+    url: 'https://sentinel.example.com/v2/verify/signature',
+    apiKey: new VerifyServerApiKey($sentinelApiKeyId, $sentinelApiKeySecret), // restricted or full key
+    timeout: 10.0,
+    retries: 2,
+));
+
+if ($result->verified) {
+    // ...
+}
+```
+
+- `apiKey` is a `restricted` or `full` API key of the account that owns the payload's (public) API key. It is sent as `Authorization: Basic base64(id:secret)`. Sentinel v2 rejects unauthenticated requests to `/v2/verify/signature` (`API_KEY_REQUIRED`).
+- The request body is `{"payload": …}`. `secret` is not sent when `apiKey` is set.
+- Sentinel v2 returns `verificationData` nested (`{"device": {"browser": …}}`). `Sentinel::verify` flattens it to the signed dotted keys (`$result->verificationData['device.browser']`); lists such as `fields` and `reasons` stay arrays.
+
+#### Sentinel v1
 
 ```php
 use AltchaOrg\Altcha\Sentinel;
 use AltchaOrg\Altcha\VerifyServerOptions;
 
 $result = Sentinel::verify(new VerifyServerOptions(
-    payload: $_POST['altcha'], // raw base64 string, or a decoded array
+    payload: $_POST['altcha'], // raw base64 string from POST /v1/verify, or a decoded array
     url: 'https://sentinel.example.com/v1/verify/signature',
     secret: $sentinelApiKeySecret, // optional, checked against the payload's API key
     timeout: 10.0,
@@ -268,21 +294,27 @@ if ($result->verified) {
 }
 ```
 
+- `/v1/verify/signature` takes no credentials. `secret` (the API key secret) is optional and is sent in the request body as `{"payload": …, "secret": …}`; Sentinel answers `WRONG_API_KEY_SECRET` when it is not the payload key's secret.
+- This also applies to the `/v1/verify/signature` alias Sentinel v2 serves with `[server] v1_compat = true`.
+
 #### `VerifyServerOptions`
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
 | `payload` | `string\|array` | required | The payload to verify, as received from the client (raw base64 string or decoded array) |
-| `url` | `string` | required | Full URL of the Sentinel `/v1/verify/signature` endpoint |
-| `secret` | `?string` | `null` | API key secret checked against the payload's API key |
+| `url` | `string` | required | Full URL of the Sentinel endpoint: `/v2/verify/signature` (v2) or `/v1/verify/signature` (v1) |
+| `secret` | `?string` | `null` | Sentinel v1 only: API key secret sent in the body and checked against the payload's API key. Ignored when `apiKey` is set |
 | `httpClient` | `?HttpClientInterface` | `null` | Custom HTTP client. Defaults to a built-in stream-based client requiring no extra extension |
-| `headers` | `array<string, string>` | `[]` | Additional headers to send with the request |
+| `headers` | `array<string, string>` | `[]` | Additional headers to send with the request. Override the `Authorization` header set from `apiKey` |
 | `timeout` | `float` | `10.0` | Per-attempt request timeout in seconds |
 | `retries` | `int` | `0` | Number of retry attempts after the first try |
 | `retryDelay` | `int` | `300` | Base delay in milliseconds between retries |
 | `retryBackoff` | `RetryBackoff` | `RetryBackoff::Exponential` | Backoff strategy (`Fixed` or `Exponential`) applied to `retryDelay` |
+| `apiKey` | `?VerifyServerApiKey` | `null` | Sentinel v2 only: `new VerifyServerApiKey(id, secret)` of a `restricted` or `full` API key, sent as HTTP Basic credentials |
 
-A `4xx`/non-2xx HTTP response and network errors are retried up to `retries` times (with backoff), except HTTP `400`, which is treated as a definitive verification failure and returned immediately.
+#### Errors and retries
+
+`4xx` responses (bad payload, missing or wrong credentials, rate limit) are definitive and returned immediately with `verified: false`. Network errors, `5xx` responses and unparseable bodies are retried up to `retries` times (with backoff). On an error response, `reason` is the `code` of Sentinel's error body (`{"code", "error", "statusCode"}`), e.g. `API_KEY_REQUIRED`; if the body has no `code` (as with Sentinel v1), its `error`; otherwise `HTTP_<status>`.
 
 #### `VerifyServerResult`
 
@@ -290,8 +322,8 @@ A `4xx`/non-2xx HTTP response and network errors are retried up to `retries` tim
 |---|---|---|
 | `verified` | `bool` | Whether the payload was successfully verified |
 | `apiKey` | `?string` | API key associated with the verification |
-| `reason` | `?string` | Reason or error message if verification failed |
-| `verificationData` | `?ServerSignatureVerificationData` | Verification data returned by Sentinel |
+| `reason` | `?string` | Why verification failed: Sentinel's `reason` (e.g. `PAYLOAD_ALREADY_USED`, `INVALID_PAYLOAD`, `API_KEY_NOT_ALLOWED` (v2), `WRONG_API_KEY_SECRET` (v1)), the error code of a `4xx`/`5xx` response, or a network error message |
+| `verificationData` | `?ServerSignatureVerificationData` | Verification data returned by Sentinel, flattened to dotted keys (`device.browser`) |
 
 To use your own HTTP client (e.g. Guzzle, Symfony HttpClient) instead of the built-in stream-based one, implement `AltchaOrg\Altcha\Http\HttpClientInterface` and pass it via `httpClient`:
 

@@ -4,7 +4,7 @@
  * Example ALTCHA server using Sentinel for remote verification.
  *
  * This example demonstrates a server that verifies form submissions
- * remotely by calling Sentinel's `/v1/verify/signature` API, instead of
+ * remotely by calling Sentinel's verify signature API, instead of
  * verifying the HMAC signature locally. No hmacSignatureSecret is needed
  * on this server — point the widget's `challengeurl` at your Sentinel
  * instance instead, since it issues and signs challenges directly.
@@ -14,7 +14,15 @@
  *                    The "altcha" field contains the base64-encoded payload,
  *                    verified remotely via Sentinel.
  *
- * Usage:
+ * Usage, Sentinel v2 (default): id and secret of a restricted or full API key
+ * of the account that owns the widget's (public) key, sent as HTTP Basic credentials:
+ *   ALTCHA_SENTINEL_URL=https://sentinel.example.com/v2/verify/signature \
+ *   ALTCHA_SENTINEL_API_KEY=key_... \
+ *   ALTCHA_SENTINEL_SECRET=sec_... \
+ *   php -S localhost:8080 examples/server_sentinel.php
+ *
+ * Usage, Sentinel v1: leave ALTCHA_SENTINEL_API_KEY unset; the secret is then
+ * optional, sent in the body and checked against the payload's API key:
  *   ALTCHA_SENTINEL_URL=https://sentinel.example.com/v1/verify/signature \
  *   ALTCHA_SENTINEL_SECRET=sec_... \
  *   php -S localhost:8080 examples/server_sentinel.php
@@ -25,12 +33,19 @@ declare(strict_types=1);
 require __DIR__ . '/../vendor/autoload.php';
 
 use AltchaOrg\Altcha\Sentinel;
+use AltchaOrg\Altcha\VerifyServerApiKey;
 use AltchaOrg\Altcha\VerifyServerOptions;
 
 // -- Configuration --
 
-$sentinelUrl = getenv('ALTCHA_SENTINEL_URL') ?: 'https://sentinel.example.com/v1/verify/signature';
+$sentinelUrl = getenv('ALTCHA_SENTINEL_URL') ?: 'https://sentinel.example.com/v2/verify/signature';
+$sentinelApiKey = getenv('ALTCHA_SENTINEL_API_KEY') ?: null;
 $sentinelSecret = getenv('ALTCHA_SENTINEL_SECRET') ?: null;
+
+if (null !== $sentinelApiKey && null === $sentinelSecret) {
+    sendJson(['error' => 'ALTCHA_SENTINEL_SECRET is required with ALTCHA_SENTINEL_API_KEY (Sentinel v2)'], 500);
+    return;
+}
 
 // -- CORS --
 
@@ -50,7 +65,7 @@ if ($method === 'OPTIONS') {
 
 try {
     match (true) {
-        $method === 'POST' && $path === '/submit' => handleSubmit($sentinelUrl, $sentinelSecret),
+        $method === 'POST' && $path === '/submit' => handleSubmit($sentinelUrl, $sentinelApiKey, $sentinelSecret),
         default => sendJson(['error' => 'Not found'], 404),
     };
 } catch (\Throwable $e) {
@@ -59,7 +74,7 @@ try {
 
 // -- Handlers --
 
-function handleSubmit(string $sentinelUrl, ?string $sentinelSecret): void
+function handleSubmit(string $sentinelUrl, ?string $sentinelApiKey, ?string $sentinelSecret): void
 {
     $altchaField = $_POST['altcha'] ?? null;
 
@@ -71,6 +86,8 @@ function handleSubmit(string $sentinelUrl, ?string $sentinelSecret): void
     $result = Sentinel::verify(new VerifyServerOptions(
         payload: $altchaField,
         url: $sentinelUrl,
+        // Sentinel v2: Basic credentials; Sentinel v1: optional body `secret` (not sent with `apiKey`).
+        apiKey: null !== $sentinelApiKey ? new VerifyServerApiKey($sentinelApiKey, (string) $sentinelSecret) : null,
         secret: $sentinelSecret,
         timeout: 10.0,
         retries: 2,
