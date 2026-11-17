@@ -3,6 +3,19 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html), except that breaking changes made to match `altcha-lib` (JS) ship in minor releases.
 
+## [2.4.0] - 2026-11-17
+
+### Added
+
+- `Sentinel::verify()` supports Sentinel v2's `POST /v2/verify/signature`. The new `VerifyServerOptions::$apiKey` (`new VerifyServerApiKey(id, secret)`, a restricted or full key) is sent as `Authorization: Basic base64(id:secret)`.
+
+### Changed
+
+- `Sentinel::verify()` sends only `{payload}` in the request body when `apiKey` is set. `secret` is for Sentinel v1's `/v1/verify/signature` only; Sentinel v2 rejects it on `/v2`.
+- **BREAKING:** `Sentinel::verify()` does not retry 4xx responses (only `400` was exempt). An error response's `reason` is the `code` from Sentinel's error body (`{code, error, statusCode}`), falling back to `error`, then `HTTP_<status>`.
+- **BREAKING:** `Sentinel::verify()` flattens Sentinel v2's nested `verificationData` (`{"device": {"browser": …}}`) to the signed dotted keys (`$data['device.browser']`); lists stay arrays.
+- README and `examples/server_sentinel.php` show remote verification against both Sentinel v2 and Sentinel v1.
+
 ## [2.3.0] - 2026-10-04
 
 ### Fixed
@@ -124,6 +137,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 Earlier 0.1.x releases (from 2024-07-26): see the git history.
 
+[2.4.0]: https://github.com/altcha-org/altcha-lib-php/compare/v2.3.0...v2.4.0
 [2.3.0]: https://github.com/altcha-org/altcha-lib-php/compare/v2.2.0...v2.3.0
 [2.2.0]: https://github.com/altcha-org/altcha-lib-php/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/altcha-org/altcha-lib-php/compare/v2.0.3...v2.1.0
